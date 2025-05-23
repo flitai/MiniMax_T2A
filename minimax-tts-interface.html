@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniMax T2A v2 语音生成器</title>
+    <style>
+        :root {
+            --primary-color: #4e54c8;
+            --secondary-color: #8f94fb;
+            --text-color: #333;
+            --light-bg: #f9f9f9;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            color: var(--text-color);
+            background: linear-gradient(120deg, #f3f4f6, #e2e8f0);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .text-input-section {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1);
+        }
+
+        .settings-section {
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 576px) {
+            .settings-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(78, 84, 200, 0.1);
+        }
+
+        .controls {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 576px) {
+            .controls {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a40a5;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-download {
+            background-color: var(--success-color);
+            color: white;
+            flex: 1;
+            display: none;
+        }
+
+        .btn-download:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-download.visible {
+            display: flex;
+        }
+
+        .audio-player-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .audio-player-section.visible {
+            display: block;
+        }
+
+        .audio-player {
+            width: 100%;
+            border-radius: 30px;
+            outline: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: var(--error-color);
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: var(--success-color);
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: var(--warning-color);
+            border: 1px solid #ffeeba;
+        }
+
+        .alert.visible {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .auth-section {
+            grid-column: 1 / -1;
+            background-color: var(--light-bg);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .character-count {
+            margin-top: 5px;
+            color: #6c757d;
+            font-size: 14px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MiniMax T2A v2 语音生成器</h1>
+            <p>输入文本，选择语音参数，生成优质语音</p>
+        </header>
+
+        <div class="main-content">
+            <div class="auth-section">
+                <h2>API 认证</h2>
+                <div class="form-group">
+                    <label for="api-key">API Key</label>
+                    <input type="password" id="api-key" placeholder="输入您的 MiniMax API Key">
+                </div>
+                <div class="form-group">
+                    <label for="group-id">Group ID</label>
+                    <input type="text" id="group-id" placeholder="输入您的 MiniMax Group ID">
+                </div>
+            </div>
+
+            <div class="text-input-section">
+                <h2>文本输入</h2>
+                <textarea id="text-input" placeholder="请输入要转换为语音的文本（最多10000字符）"></textarea>
+                <div class="character-count">0/10000 字符</div>
+            </div>
+
+            <div class="settings-section">
+                <h2>语音设置</h2>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="model">模型</label>
+                        <select id="model">
+                            <option value="speech-02-hd">speech-02-hd (高清)</option>
+                            <option value="speech-02-turbo">speech-02-turbo (快速)</option>
+                            <option value="speech-01-hd">speech-01-hd</option>
+                            <option value="speech-01-turbo">speech-01-turbo</option>
+                            <option value="speech-01-240228">speech-01-240228</option>
+                            <option value="speech-01-turbo-240228">speech-01-turbo-240228</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="voice-id">音色</label>
+                        <select id="voice-id">
+                            <option value="male-qn-qingse">青涩青年音色</option>
+                            <option value="male-qn-jingying">精英青年音色</option>
+                            <option value="male-qn-badao">霸道青年音色</option>
+                            <option value="male-qn-daxuesheng">青年大学生音色</option>
+                            <option value="female-shaonv">少女音色</option>
+                            <option value="female-yujie">御姐音色</option>
+                            <option value="female-chengshu">成熟女性音色</option>
+                            <option value="female-tianmei">甜美女性音色</option>
+                            <option value="presenter_male">男性主持人</option>
+                            <option value="presenter_female">女性主持人</option>
+                            <option value="audiobook_male_1">男性有声书1</option>
+                            <option value="audiobook_male_2">男性有声书2</option>
+                            <option value="audiobook_female_1">女性有声书1</option>
+                            <option value="audiobook_female_2">女性有声书2</option>
+                            <option value="clever_boy">聪明男童</option>
+                            <option value="cute_boy">可爱男童</option>
+                            <option value="lovely_girl">萌萌女童</option>
+                            <option value="cartoon_pig">卡通猪小琪</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="speed">语速 (0.5-2.0)</label>
+                        <input type="number" id="speed" min="0.5" max="2" step="0.1" value="1.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="vol">音量 (0.1-10.0)</label>
+                        <input type="number" id="vol" min="0.1" max="10" step="0.1" value="1.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="pitch">音调 (-12 至 12)</label>
+                        <input type="number" id="pitch" min="-12" max="12" step="1" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="emotion">情绪</label>
+                        <select id="emotion">
+                            <option value="neutral">中性</option>
+                            <option value="happy">高兴</option>
+                            <option value="sad">悲伤</option>
+                            <option value="angry">愤怒</option>
+                            <option value="fearful">害怕</option>
+                            <option value="disgusted">厌恶</option>
+                            <option value="surprised">惊讶</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2>音频设置</h2>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="sample-rate">采样率</label>
+                        <select id="sample-rate">
+                            <option value="8000">8000 Hz</option>
+                            <option value="16000">16000 Hz</option>
+                            <option value="22050">22050 Hz</option>
+                            <option value="24000">24000 Hz</option>
+                            <option value="32000" selected>32000 Hz</option>
+                            <option value="44100">44100 Hz</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bitrate">比特率</label>
+                        <select id="bitrate">
+                            <option value="32000">32 kbps</option>
+                            <option value="64000">64 kbps</option>
+                            <option value="128000" selected>128 kbps</option>
+                            <option value="256000">256 kbps</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="format">音频格式</label>
+                        <select id="format">
+                            <option value="mp3" selected>MP3</option>
+                            <option value="wav">WAV</option>
+                            <option value="pcm">PCM</option>
+                            <option value="flac">FLAC</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="channel">声道数</label>
+                        <select id="channel">
+                            <option value="1" selected>单声道</option>
+                            <option value="2">双声道</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-error" id="error-alert"></div>
+            <div class="alert alert-success" id="success-alert"></div>
+            <div class="alert alert-warning" id="warning-alert"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在生成语音，请稍候...</p>
+            </div>
+
+            <div class="audio-player-section" id="audio-player-section">
+                <h2>预览</h2>
+                <audio controls class="audio-player" id="audio-player">
+                    您的浏览器不支持音频播放元素。
+                </audio>
+            </div>
+
+            <div class="controls">
+                <button id="generate-btn" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.5 3a.5.5 0 0 1 .5.5V5h1.5a.5.5 0 0 1 0 1H12v1.5a.5.5 0 0 1-1 0V6H9.5a.5.5 0 0 1 0-1H11V3.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+                    </svg>
+                    生成语音
+                </button>
+                <button id="download-btn" class="btn-download">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                    下载语音
+                </button>
+                <button id="clear-btn" class="btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5zM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528zM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5z"/>
+                    </svg>
+                    清空
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2025 MiniMax T2A v2 语音生成器 | 基于 MiniMax API</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('text-input');
+            const characterCount = document.querySelector('.character-count');
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const audioPlayer = document.getElementById('audio-player');
+            const audioSection = document.getElementById('audio-player-section');
+            const loading = document.getElementById('loading');
+            const errorAlert = document.getElementById('error-alert');
+            const successAlert = document.getElementById('success-alert');
+            const warningAlert = document.getElementById('warning-alert');
+            
+            // API认证
+            const apiKeyInput = document.getElementById('api-key');
+            const groupIdInput = document.getElementById('group-id');
+            
+            // 音频数据
+            let audioData = null;
+            let audioFormat = 'mp3';
+            
+            // 字符计数
+            textInput.addEventListener('input', function() {
+                const count = this.value.length;
+                characterCount.textContent = `${count}/10000 字符`;
+                
+                if (count > 10000) {
+                    characterCount.style.color = 'red';
+                } else {
+                    characterCount.style.color = '#6c757d';
+                }
+            });
+            
+            // 清空按钮
+            clearBtn.addEventListener('click', function() {
+                textInput.value = '';
+                characterCount.textContent = '0/10000 字符';
+                hideElement(audioSection);
+                hideElement(downloadBtn);
+                hideElement(errorAlert);
+                hideElement(successAlert);
+                hideElement(warningAlert);
+            });
+            
+            // 生成语音按钮
+            generateBtn.addEventListener('click', async function() {
+                // 验证输入
+                const apiKey = apiKeyInput.value.trim();
+                const groupId = groupIdInput.value.trim();
+                const text = textInput.value.trim();
+                
+                if (!apiKey) {
+                    showError('请输入 API Key');
+                    return;
+                }
+                
+                if (!groupId) {
+                    showError('请输入 Group ID');
+                    return;
+                }
+                
+                if (!text) {
+                    showError('请输入要转换为语音的文本');
+                    return;
+                }
+                
+                if (text.length > 10000) {
+                    showError('文本长度超过10000字符限制');
+                    return;
+                }
+                
+                // 隐藏之前的警告和结果
+                hideElement(errorAlert);
+                hideElement(successAlert);
+                hideElement(warningAlert);
+                hideElement(audioSection);
+                hideElement(downloadBtn);
+                
+                // 显示加载中
+                showElement(loading);
+                
+                try {
+                    // 获取所有设置值
+                    const model = document.getElementById('model').value;
+                    const voiceId = document.getElementById('voice-id').value;
+                    const speed = parseFloat(document.getElementById('speed').value);
+                    const vol = parseFloat(document.getElementById('vol').value);
+                    const pitch = parseInt(document.getElementById('pitch').value);
+                    const emotion = document.getElementById('emotion').value;
+                    const sampleRate = parseInt(document.getElementById('sample-rate').value);
+                    const bitrate = parseInt(document.getElementById('bitrate').value);
+                    audioFormat = document.getElementById('format').value;
+                    const channel = parseInt(document.getElementById('channel').value);
+                    
+                    // 准备请求体
+                    const requestBody = {
+                        model: model,
+                        text: text,
+                        stream: false,
+                        output_format: "hex",
+                        voice_setting: {
+                            voice_id: voiceId,
+                            speed: speed,
+                            vol: vol,
+                            pitch: pitch,
+                            emotion: emotion
+                        },
+                        audio_setting: {
+                            sample_rate: sampleRate,
+                            bitrate: bitrate,
+                            format: audioFormat,
+                            channel: channel
+                        }
+                    };
+                    
+                    // 发送请求到API
+                    const response = await fetch(`https://api.minimax.chat/v1/t2a_v2?GroupId=${groupId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // 隐藏加载中
+                    hideElement(loading);
+                    
+                    if (!response.ok || (data.base_resp && data.base_resp.status_code !== 0)) {
+                        // 处理API错误
+                        const errorMessage = data.base_resp ? 
+                            `错误 (${data.base_resp.status_code}): ${data.base_resp.status_msg}` : 
+                            '语音生成请求失败';
+                        showError(errorMessage);
+                        return;
+                    }
+                    
+                    // 处理成功响应
+                    if (data.data && data.data.audio) {
+                        // 将十六进制转换为Blob并创建URL
+                        audioData = data.data.audio;
+                        const audioBytes = hexToArrayBuffer(audioData);
+                        const blob = new Blob([audioBytes], { type: `audio/${audioFormat}` });
+                        const audioUrl = URL.createObjectURL(blob);
+                        
+                        // 更新音频播放器
+                        audioPlayer.src = audioUrl;
+                        showElement(audioSection);
+                        showElement(downloadBtn);
+                        
+                        // 显示成功消息
+                        showSuccess('语音生成成功！');
+                        
+                        // 显示音频信息
+                        if (data.extra_info) {
+                            const duration = data.extra_info.audio_length / 1000; // 毫秒转秒
+                            showWarning(`音频长度: ${duration.toFixed(2)}秒 | 大小: ${(data.extra_info.audio_size / 1024).toFixed(2)} KB`);
+                        }
+                    } else {
+                        showError('响应中未找到音频数据');
+                    }
+                    
+                } catch (error) {
+                    hideElement(loading);
+                    showError(`请求错误: ${error.message}`);
+                    console.error('Error:', error);
+                }
+            });
+            
+            // 下载按钮
+            downloadBtn.addEventListener('click', function() {
+                if (!audioData) {
+                    showError('没有可下载的音频');
+                    return;
+                }
+                
+                // 创建下载链接
+                const audioBytes = hexToArrayBuffer(audioData);
+                const blob = new Blob([audioBytes], { type: `audio/${audioFormat}` });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tts_audio_${Date.now()}.${audioFormat}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+            
+            // 工具函数：十六进制转ArrayBuffer
+            function hexToArrayBuffer(hexString) {
+                const bytes = new Uint8Array(hexString.length / 2);
+                for (let i = 0; i < hexString.length; i += 2) {
+                    bytes[i / 2] = parseInt(hexString.substring(i, i + 2), 16);
+                }
+                return bytes.buffer;
+            }
+            
+            // 工具函数：显示元素
+            function showElement(element) {
+                element.classList.add('visible');
+            }
+            
+            // 工具函数：隐藏元素
+            function hideElement(element) {
+                element.classList.remove('visible');
+            }
+            
+            // 工具函数：显示错误
+            function showError(message) {
+                errorAlert.textContent = message;
+                showElement(errorAlert);
+                setTimeout(() => {
+                    hideElement(errorAlert);
+                }, 10000);
+            }
+            
+            // 工具函数：显示成功
+            function showSuccess(message) {
+                successAlert.textContent = message;
+                showElement(successAlert);
+                setTimeout(() => {
+                    hideElement(successAlert);
+                }, 5000);
+            }
+            
+            // 工具函数：显示警告
+            function showWarning(message) {
+                warningAlert.textContent = message;
+                showElement(warningAlert);
+                setTimeout(() => {
+                    hideElement(warningAlert);
+                }, 8000);
+            }
+        });
+    </script>
+</body>
+</html>
